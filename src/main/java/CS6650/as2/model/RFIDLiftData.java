@@ -19,6 +19,10 @@ public class RFIDLiftData implements Serializable, Comparable<RFIDLiftData>  {
     private int liftID;
     private int time;
 
+    public RFIDLiftData() {
+
+    }
+
     public RFIDLiftData(int resortID, int dayNum, int skierID, int liftID, int time) {
         this.resortID = resortID;
         this.dayNum = dayNum;
@@ -73,5 +77,10 @@ public class RFIDLiftData implements Serializable, Comparable<RFIDLiftData>  {
         //ascending order
         return this.time - compareTime ;
     }
-    
+
+    @Override
+    public String toString() {
+        return this.resortID + " " + this.dayNum + " " + this.skierID + " " +
+                this.liftID + " " + this.time + " ";
+    }
 }

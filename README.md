@@ -1,1 +1,1 @@
-# CS6650 Assignment2 Server
+# CS6650 Assignment2 Client
