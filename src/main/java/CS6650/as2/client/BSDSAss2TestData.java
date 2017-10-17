@@ -1,25 +1,24 @@
 package CS6650.as2.client;
 
 import CS6650.as2.model.RFIDLiftData;
+import CS6650.as2.util.Stat;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class BSDSAss2TestData {
 
-    private String protocol = "http";
-    private String api = "/rest/hello/load";
-    private String host = "localhost";
-    private int port = 8080;
+    static private String protocol = "http";
+    static private String host = "localhost";
+    static private int port = 8080;
+    static private String api = "/rest/hello/load";
 
     public void outputData(ArrayList<RFIDLiftData> RFIDDataIn) {
         // System independent newline
@@ -34,38 +33,19 @@ public class BSDSAss2TestData {
                     String.valueOf (tmp.getTime()) + newline
             );
             count++;
-            //if(count == 10) break;
         }
         System.out.println("Rec Count = " + count);
     }
 
-    public void doPost(Client client, RFIDLiftData data) throws MalformedURLException {
-        URL url = new URL(protocol, host, port, api);
-        WebTarget webTarget = client.target(url.toString());
-        Response response = null;
-//        boolean isSent = false;
-        try {
-            response = webTarget.request().post(Entity.json(data));
-            System.out.println(response.readEntity(String.class));
-            response.close();
-//            isSent = true;
-        } catch (ProcessingException e) {
-            e.printStackTrace();
-        }
-    }
-
-
     public static void main(String[] args) {
 
         // file and stream for input
-        FileInputStream fis = null;
-        ObjectInputStream ois = null;
         String fileURL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
         ArrayList <RFIDLiftData> RFIDDataIn = new ArrayList<RFIDLiftData>();
         try {
             // cannot read .ser file because of the wrong serializedID and wrong package name
             // read .csv data
-            System.out.println("===Reading array list");
+            System.out.println(">>>>>> Reading array list");
 
             BufferedReader br = new BufferedReader(new FileReader(fileURL));
             String line = br.readLine(); // skip the first line
@@ -81,27 +61,35 @@ public class BSDSAss2TestData {
             }
 
             br.close();
-            
+            System.out.println(">>>>>> Reading complete");
+
         }catch(IOException ioe){
             ioe.printStackTrace();
             return;
         }
 
          // post all data
-        BSDSAss2TestData bsdsAss2TestData = new BSDSAss2TestData();
+        System.out.println(">>>>>> Start posting request");
+        int taskSize = 10;
         Client client = ClientBuilder.newClient();
-        long startTime = System.currentTimeMillis();
-//        for (int i = 0; i < RFIDDataIn.size(); ++i) {
-        for (int i = 0; i < 1000; ++i) {
-            try {
-                bsdsAss2TestData.doPost(client, RFIDDataIn.get(i));
-            } catch (Exception e){
-                System.out.println("has problems on post");
-            }
+        ArrayList<PostRFIDData> postTasks = new ArrayList<PostRFIDData>();
+        //for (int i = 0; i < RFIDDataIn.size(); i++) {
+        Stat stat = new Stat();
+        for (int i = 0; i < 10000; i++) {
+            postTasks.add(new PostRFIDData(protocol, host, port, api, RFIDDataIn.get(i), client, stat));
         }
-        long totalTime = System.currentTimeMillis() - startTime;
-        System.out.println("Total runtime: " + totalTime);
+        ExecutorService pool = Executors.newFixedThreadPool(taskSize);
+        try {
+            pool.invokeAll(postTasks);
+            pool.shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         client.close();
+        System.out.println(">>>>>> Total latency: " + stat.getTotalLatency());
+        System.out.println(">>>>>> Total request sent: " + stat.getSentRequestsNum());
+        System.out.println(">>>>>> Total successful request: " + stat.getSuccessRequestsNum());
 
     }
 }
