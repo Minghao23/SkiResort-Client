@@ -13,12 +13,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class BSDSAss2TestData {
+public class Main {
 
-    static private String protocol = "http";
-    static private String host = "localhost";
-    static private int port = 8080;
-    static private String api = "/rest/hello/load";
+    static final private String protocol = "http";
+    static final private String host = "localhost";
+    static final private int port = 8080;
 
     public void outputData(ArrayList<RFIDLiftData> RFIDDataIn) {
         // System independent newline
@@ -37,9 +36,7 @@ public class BSDSAss2TestData {
         System.out.println("Rec Count = " + count);
     }
 
-    public static void main(String[] args) {
-
-        // file and stream for input
+    public ArrayList <RFIDLiftData> readFileData() {
         String fileURL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
         ArrayList <RFIDLiftData> RFIDDataIn = new ArrayList<RFIDLiftData>();
         try {
@@ -65,18 +62,19 @@ public class BSDSAss2TestData {
 
         }catch(IOException ioe){
             ioe.printStackTrace();
-            return;
         }
+        return RFIDDataIn;
+    }
+    public void postTask(int taskSize) {
+        ArrayList <RFIDLiftData> RFIDDataIn = readFileData();
 
-         // post all data
-        System.out.println(">>>>>> Start posting request");
-        int taskSize = 10;
+        // apply multi-thread
+        System.out.println(">>>>>> Start post request");
         Client client = ClientBuilder.newClient();
         ArrayList<PostRFIDData> postTasks = new ArrayList<PostRFIDData>();
-        //for (int i = 0; i < RFIDDataIn.size(); i++) {
         Stat stat = new Stat();
-        for (int i = 0; i < 10000; i++) {
-            postTasks.add(new PostRFIDData(protocol, host, port, api, RFIDDataIn.get(i), client, stat));
+        for (int i = 0; i < 10000; i++) { // test in 10000 data
+            postTasks.add(new PostRFIDData(protocol, host, port, "/rest/hello/load", RFIDDataIn.get(i), client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
         try {
@@ -92,7 +90,22 @@ public class BSDSAss2TestData {
         System.out.println(">>>>>> Total successful request: " + stat.getSuccessRequestsNum());
 
     }
+
+    public void getTask(int skierID, int dayNum) {
+        // maybe don't need multi-thread?
+        System.out.println(">>>>>> Start get request");
+        Client client = ClientBuilder.newClient();
+        String api = "/rest/hello/myvert/" + skierID + "&" + dayNum;
+        Stat stat = new Stat();
+        GetMyVert getMyVert = new GetMyVert(protocol, host, port, api, client, stat);
+        System.out.println(getMyVert.call().toString());
+        client.close();
+    }
+
+    public static void main(String[] args) {
+        Main main = new Main();
+        //main.postTask(10);
+        main.getTask(17,1);
+    }
 }
-        
-               
- 
+
