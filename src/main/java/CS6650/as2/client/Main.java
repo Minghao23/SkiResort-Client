@@ -67,7 +67,7 @@ public class Main {
             }
 
             br.close();
-            System.out.println(">>>>>> Reading complete");
+            System.out.println(">>>>>> Reading complete.");
 
         }catch(IOException ioe){
             ioe.printStackTrace();
@@ -75,7 +75,7 @@ public class Main {
     }
     public void postTasks(int taskSize) {
         // apply multi-thread
-        System.out.println(">>>>>> Start post requests");
+        System.out.println(">>>>>> Start POST requests...");
         long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
         ArrayList<PostRFIDData> postTasks = new ArrayList<PostRFIDData>();
@@ -92,11 +92,18 @@ public class Main {
         }
 
         client.close();
+        System.out.println(">>>>>> Session ends");
+        System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
-        System.out.println(">>>>>> Total runtime: " + (System.currentTimeMillis() - startTime));
-        System.out.println(">>>>>> Total latency: " + stat.getTotalLatency());
-        System.out.println(">>>>>> Total request sent: " + stat.getSentRequestsNum());
-        System.out.println(">>>>>> Total successful request: " + stat.getSuccessRequestsNum());
+        System.out.println("> Number of threads: " + taskSize);
+        System.out.println("> Total runtime: " + (System.currentTimeMillis() - startTime));
+        System.out.println("> Total latency: " + stat.getTotalLatency());
+        System.out.println("> Total request sent: " + stat.getSentRequestsNum());
+        System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
+        System.out.println("> Mean latency: " + stat.getMeanLatency());
+        System.out.println("> Median latency: " + stat.getMedianLatency());
+        System.out.println("> 95th percentile latency: " + stat.get95thLatency());
+        System.out.println("> 99th percentile latency: " + stat.get99thLatency());
 
     }
 
@@ -112,12 +119,12 @@ public class Main {
 
     public void getTasks(int dayNum, int taskSize) {
         // apply multi-thread
-        System.out.println(">>>>>> Start get requests");
+        System.out.println(">>>>>> Start GET requests...");
         long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
         ArrayList<GetMyVert> getMyVerts = new ArrayList<GetMyVert>();
         Stat stat = new Stat();
-        for (int i = 0; i < 1000; i++) { // test in 10000 data
+        for (int i = 0; i < 10000; i++) { // test in 10000 data
             getMyVerts.add(new GetMyVert(protocol, host, port, RFIDDataIn.get(i).getSkierID(), dayNum, client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
@@ -129,19 +136,25 @@ public class Main {
         }
 
         client.close();
+        System.out.println(">>>>>> Session ends");
+        System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
-        System.out.println(">>>>>> Total runtime: " + (System.currentTimeMillis() - startTime));
-        System.out.println(">>>>>> Total latency: " + stat.getTotalLatency());
-        System.out.println(">>>>>> Total request sent: " + stat.getSentRequestsNum());
-        System.out.println(">>>>>> Total successful request: " + stat.getSuccessRequestsNum());
-
+        System.out.println("> Number of threads: " + taskSize);
+        System.out.println("> Total runtime: " + (System.currentTimeMillis() - startTime));
+        System.out.println("> Total latency: " + stat.getTotalLatency());
+        System.out.println("> Total request sent: " + stat.getSentRequestsNum());
+        System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
+        System.out.println("> Mean latency: " + stat.getMeanLatency());
+        System.out.println("> Median latency: " + stat.getMedianLatency());
+        System.out.println("> 95th percentile latency: " + stat.get95thLatency());
+        System.out.println("> 99th percentile latency: " + stat.get99thLatency());
     }
 
     public static void main(String[] args) {
         Main main = new Main();
         main.readFileData(fileURL);
-        main.postTasks(10);
-        //main.getTasks(1,10);
+        //main.postTasks(10);
+        main.getTasks(1,10);
         //main.singleGetTask(17,1);
     }
 }
