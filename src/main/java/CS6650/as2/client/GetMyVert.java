@@ -14,26 +14,29 @@ import java.util.concurrent.Callable;
 /**
  * Created by hu_minghao on 10/16/17.
  */
-public class GetMyVert implements Callable<Object> {
+public class GetMyVert implements Callable<MyVert> {
 
     private String protocol;
     private String host;
     private int port;
-    private String api ;
+    private int skierID;
+    private int dayNum;
     Client client;
     Stat stat;
 
-    public GetMyVert(String protocol, String host, int port, String api, Client client, Stat stat) {
+    public GetMyVert(String protocol, String host, int port, int skierID, int dayNum, Client client, Stat stat) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
-        this.api = api;
+        this.skierID = skierID;
+        this.dayNum = dayNum;
         this.client = client;
         this.stat = stat;
     }
 
     public MyVert call() {
         URL url = null;
+        String api = "/rest/hello/myvert/" + skierID + "&" + dayNum;
         try{
             url = new URL(protocol, host, port, api);
         } catch (MalformedURLException e){
@@ -46,6 +49,7 @@ public class GetMyVert implements Callable<Object> {
         try {
             response = webTarget.request().get();
             result = response.readEntity(MyVert.class);
+            System.out.println("SkierID: " + skierID + "  Vertical: " + result.getTotalVertical() + "  Lift times: " + result.getLiftTimes());
             response.close();
             stat.recordSentRequestNum();
             stat.recordSuccessfulRequestNum(response.getStatus() == 200);

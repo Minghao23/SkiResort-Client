@@ -1,5 +1,6 @@
 package CS6650.as2.client;
 
+import CS6650.as2.model.MyVert;
 import CS6650.as2.model.RFIDLiftData;
 import CS6650.as2.util.Stat;
 
@@ -9,15 +10,20 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.concurrent.Future;
 
 public class Main {
 
     static final private String protocol = "http";
     static final private String host = "localhost";
     static final private int port = 8080;
+
+    static final String fileURL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
+    ArrayList<RFIDLiftData> RFIDDataIn = new ArrayList<RFIDLiftData>();
+
 
     public void outputData(ArrayList<RFIDLiftData> RFIDDataIn) {
         // System independent newline
@@ -36,9 +42,12 @@ public class Main {
         System.out.println("Rec Count = " + count);
     }
 
-    public ArrayList <RFIDLiftData> readFileData() {
-        String fileURL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
-        ArrayList <RFIDLiftData> RFIDDataIn = new ArrayList<RFIDLiftData>();
+    public void readFileData(String fileURL) {
+
+        if (!RFIDDataIn.isEmpty()) {
+            RFIDDataIn.clear();
+        }
+
         try {
             // cannot read .ser file because of the wrong serializedID and wrong package name
             // read .csv data
@@ -63,13 +72,11 @@ public class Main {
         }catch(IOException ioe){
             ioe.printStackTrace();
         }
-        return RFIDDataIn;
     }
-    public void postTask(int taskSize) {
-        ArrayList <RFIDLiftData> RFIDDataIn = readFileData();
-
+    public void postTasks(int taskSize) {
         // apply multi-thread
-        System.out.println(">>>>>> Start post request");
+        System.out.println(">>>>>> Start post requests");
+        long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
         ArrayList<PostRFIDData> postTasks = new ArrayList<PostRFIDData>();
         Stat stat = new Stat();
@@ -85,27 +92,57 @@ public class Main {
         }
 
         client.close();
+        System.out.println(">>>>>> STATISTICS <<<<<<");
+        System.out.println(">>>>>> Total runtime: " + (System.currentTimeMillis() - startTime));
         System.out.println(">>>>>> Total latency: " + stat.getTotalLatency());
         System.out.println(">>>>>> Total request sent: " + stat.getSentRequestsNum());
         System.out.println(">>>>>> Total successful request: " + stat.getSuccessRequestsNum());
 
     }
 
-    public void getTask(int skierID, int dayNum) {
+    public void singleGetTask(int skierID, int dayNum) {
         // maybe don't need multi-thread?
-        System.out.println(">>>>>> Start get request");
         Client client = ClientBuilder.newClient();
         String api = "/rest/hello/myvert/" + skierID + "&" + dayNum;
         Stat stat = new Stat();
-        GetMyVert getMyVert = new GetMyVert(protocol, host, port, api, client, stat);
+        GetMyVert getMyVert = new GetMyVert(protocol, host, port, skierID, dayNum, client, stat);
         System.out.println(getMyVert.call().toString());
         client.close();
     }
 
+    public void getTasks(int dayNum, int taskSize) {
+        // apply multi-thread
+        System.out.println(">>>>>> Start get requests");
+        long startTime = System.currentTimeMillis();
+        Client client = ClientBuilder.newClient();
+        ArrayList<GetMyVert> getMyVerts = new ArrayList<GetMyVert>();
+        Stat stat = new Stat();
+        for (int i = 0; i < 1000; i++) { // test in 10000 data
+            getMyVerts.add(new GetMyVert(protocol, host, port, RFIDDataIn.get(i).getSkierID(), dayNum, client, stat));
+        }
+        ExecutorService pool = Executors.newFixedThreadPool(taskSize);
+        try {
+            List<Future<MyVert>> futures = pool.invokeAll(getMyVerts);
+            pool.shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        client.close();
+        System.out.println(">>>>>> STATISTICS <<<<<<");
+        System.out.println(">>>>>> Total runtime: " + (System.currentTimeMillis() - startTime));
+        System.out.println(">>>>>> Total latency: " + stat.getTotalLatency());
+        System.out.println(">>>>>> Total request sent: " + stat.getSentRequestsNum());
+        System.out.println(">>>>>> Total successful request: " + stat.getSuccessRequestsNum());
+
+    }
+
     public static void main(String[] args) {
         Main main = new Main();
-        //main.postTask(10);
-        main.getTask(17,1);
+        main.readFileData(fileURL);
+        main.postTasks(10);
+        //main.getTasks(1,10);
+        //main.singleGetTask(17,1);
     }
 }
 
