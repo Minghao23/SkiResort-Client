@@ -1,6 +1,6 @@
 package CS6650.as2.client;
 
-import CS6650.as2.model.RFIDLiftData;
+import CS6650.as2.model.Record;
 import CS6650.as2.util.Stat;
 
 import javax.ws.rs.ProcessingException;
@@ -15,17 +15,17 @@ import java.util.concurrent.Callable;
 /**
  * Created by hu_minghao on 10/16/17.
  */
-public class PostRFIDData implements Callable<Object> {
+public class PostRecord implements Callable<Object> {
 
     private String protocol;
     private String host;
     private int port;
     private String api ;
-    RFIDLiftData data;
+    Record data;
     Client client;
     Stat stat;
 
-    public PostRFIDData(String protocol, String host, int port, String api, RFIDLiftData data, Client client, Stat stat) {
+    public PostRecord(String protocol, String host, int port, String api, Record data, Client client, Stat stat) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;

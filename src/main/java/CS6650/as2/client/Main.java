@@ -1,7 +1,7 @@
 package CS6650.as2.client;
 
 import CS6650.as2.model.MyVert;
-import CS6650.as2.model.RFIDLiftData;
+import CS6650.as2.model.Record;
 import CS6650.as2.util.Stat;
 
 import javax.ws.rs.client.Client;
@@ -22,16 +22,16 @@ public class Main {
     static final private int port = 8080;
 
     static final String fileURL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
-    ArrayList<RFIDLiftData> RFIDDataIn = new ArrayList<RFIDLiftData>();
+    ArrayList<Record> Records = new ArrayList<Record>();
 
 
-    public void outputData(ArrayList<RFIDLiftData> RFIDDataIn) {
+    public void outputData(ArrayList<Record> Records) {
         // System independent newline
         String newline = System.getProperty("line.separator");
         int count = 0;
         System.out.println("===Array List contents");
-        for(RFIDLiftData tmp: RFIDDataIn){
-            System.out.print(String.valueOf (tmp.getResortID()) +  " " +
+        for(Record tmp: Records){
+            System.out.print(String.valueOf (tmp.getRecordID()) +  " " +
                     String.valueOf (tmp.getDayNum()) +  " " +
                     String.valueOf (tmp.getSkierID()) +  " " +
                     String.valueOf (tmp.getLiftID()) +  " " +
@@ -44,8 +44,8 @@ public class Main {
 
     public void readFileData(String fileURL) {
 
-        if (!RFIDDataIn.isEmpty()) {
-            RFIDDataIn.clear();
+        if (!Records.isEmpty()) {
+            Records.clear();
         }
 
         try {
@@ -57,13 +57,12 @@ public class Main {
             String line = br.readLine(); // skip the first line
             while ((line = br.readLine()) != null){
                 String[] fields = line.split(",");
-                RFIDLiftData rfidLiftData = new RFIDLiftData(
-                        Integer.parseInt(fields[0]),
-                        Integer.parseInt(fields[1]),
-                        Integer.parseInt(fields[2]),
-                        Integer.parseInt(fields[3]),
-                        Integer.parseInt(fields[4]));
-                RFIDDataIn.add(rfidLiftData);
+                Record record = new Record(
+                        Integer.parseInt(fields[2]), // Column skier
+                        Integer.parseInt(fields[3]), // Column lift
+                        Integer.parseInt(fields[1]), // Column day
+                        Integer.parseInt(fields[4])); // Column time
+                Records.add(record);
             }
 
             br.close();
@@ -78,10 +77,10 @@ public class Main {
         System.out.println(">>>>>> Start POST requests...");
         long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
-        ArrayList<PostRFIDData> postTasks = new ArrayList<PostRFIDData>();
+        ArrayList<PostRecord> postTasks = new ArrayList<PostRecord>();
         Stat stat = new Stat();
-        for (int i = 0; i < 10000; i++) { // test in 10000 data
-            postTasks.add(new PostRFIDData(protocol, host, port, "/rest/hello/load", RFIDDataIn.get(i), client, stat));
+        for (int i = 0; i < 1000; i++) { // test in 10000 data
+            postTasks.add(new PostRecord(protocol, host, port, "/rest/hello/load", Records.get(i), client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
         try {
@@ -96,8 +95,7 @@ public class Main {
         System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
         System.out.println("> Number of threads: " + taskSize);
-        System.out.println("> Total runtime: " + (System.currentTimeMillis() - startTime));
-        System.out.println("> Total latency: " + stat.getTotalLatency());
+        System.out.println("> Total run time: " + (System.currentTimeMillis() - startTime));
         System.out.println("> Total request sent: " + stat.getSentRequestsNum());
         System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
         System.out.println("> Mean latency: " + stat.getMeanLatency());
@@ -108,12 +106,11 @@ public class Main {
     }
 
     public void singleGetTask(int skierID, int dayNum) {
-        // maybe don't need multi-thread?
         Client client = ClientBuilder.newClient();
         String api = "/rest/hello/myvert/" + skierID + "&" + dayNum;
         Stat stat = new Stat();
         GetMyVert getMyVert = new GetMyVert(protocol, host, port, skierID, dayNum, client, stat);
-        System.out.println(getMyVert.call().toString());
+        getMyVert.call().toString();
         client.close();
     }
 
@@ -125,7 +122,7 @@ public class Main {
         ArrayList<GetMyVert> getMyVerts = new ArrayList<GetMyVert>();
         Stat stat = new Stat();
         for (int i = 0; i < 10000; i++) { // test in 10000 data
-            getMyVerts.add(new GetMyVert(protocol, host, port, RFIDDataIn.get(i).getSkierID(), dayNum, client, stat));
+            getMyVerts.add(new GetMyVert(protocol, host, port, Records.get(i).getSkierID(), dayNum, client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
         try {
@@ -140,8 +137,7 @@ public class Main {
         System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
         System.out.println("> Number of threads: " + taskSize);
-        System.out.println("> Total runtime: " + (System.currentTimeMillis() - startTime));
-        System.out.println("> Total latency: " + stat.getTotalLatency());
+        System.out.println("> Total run time: " + (System.currentTimeMillis() - startTime));
         System.out.println("> Total request sent: " + stat.getSentRequestsNum());
         System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
         System.out.println("> Mean latency: " + stat.getMeanLatency());
@@ -153,9 +149,10 @@ public class Main {
     public static void main(String[] args) {
         Main main = new Main();
         main.readFileData(fileURL);
-        //main.postTasks(10);
-        main.getTasks(1,10);
-        //main.singleGetTask(17,1);
+
+        main.postTasks(10);
+        //main.getTasks(1,10);
+        //main.singleGetTask(9,1);
     }
 }
 
