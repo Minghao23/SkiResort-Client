@@ -79,7 +79,7 @@ public class Main {
         Client client = ClientBuilder.newClient();
         ArrayList<PostRecord> postTasks = new ArrayList<PostRecord>();
         Stat stat = new Stat();
-        for (int i = 0; i < 1000; i++) { // test in 10000 data
+        for (int i = 0; i < Records.size(); i++) { // test in 10000 data
             postTasks.add(new PostRecord(protocol, host, port, "/rest/hello/load", Records.get(i), client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);

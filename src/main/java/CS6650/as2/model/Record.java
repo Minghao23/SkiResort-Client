@@ -76,7 +76,6 @@ public class Record {
 
     @Override
     public String toString() {
-        return "RecordID: " + this.recordID + "  SkierID: " + this.skierID + "  Lift: " +
-                this.liftID + "  Day: " + this.dayNum + "  Time: " + this.time;
+        return "SkierID: " + this.skierID + "  Lift: " + this.liftID + "  Day: " + this.dayNum + "  Time: " + this.time;
     }
 }
