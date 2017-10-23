@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Class-Path: osgi-resource-locator-1.0.1.jar jersey-common-2.25.1.jar c
+ ommons-logging-1.1.1.jar jackson-databind-2.8.4.jar jersey-media-json
+ -jackson-2.26.jar javax.ws.rs-api-2.0.1.jar commons-collections-3.2.1
+ .jar jersey-entity-filtering-2.26.jar jackson-core-2.8.4.jar jersey-c
+ lient-2.25.1.jar hk2-locator-2.5.0-b32.jar javassist-3.20.0-GA.jar ja
+ vax.inject-2.5.0-b32.jar javax.annotation-api-1.2.jar ezmorph-1.0.6.j
+ ar jackson-annotations-2.8.4.jar hk2-api-2.5.0-b32.jar aopalliance-re
+ packaged-2.5.0-b32.jar json-lib-2.4-jdk15.jar commons-beanutils-1.8.0
+ .jar commons-lang-2.5.jar jackson-module-jaxb-annotations-2.8.4.jar j
+ ersey-guava-2.25.1.jar hk2-utils-2.5.0-b32.jar
+Main-Class: CS6650.as2.client.Main
+

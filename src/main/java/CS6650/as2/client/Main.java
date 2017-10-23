@@ -3,12 +3,15 @@ package CS6650.as2.client;
 import CS6650.as2.model.MyVert;
 import CS6650.as2.model.Record;
 import CS6650.as2.util.Stat;
+import org.glassfish.jersey.client.ClientProperties;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -18,11 +21,12 @@ import java.util.concurrent.Future;
 public class Main {
 
     static final private String protocol = "http";
-    static final private String host = "localhost";
+    static final private String host = "54.200.82.186";
     static final private int port = 8080;
 
-    static final String fileURL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
-    ArrayList<Record> Records = new ArrayList<Record>();
+    static final String fileURL1 = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
+    static final String fileURL2 = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day2.csv";
+    ArrayList<Record> records = new ArrayList<Record>();
 
 
     public void outputData(ArrayList<Record> Records) {
@@ -44,8 +48,8 @@ public class Main {
 
     public void readFileData(String fileURL) {
 
-        if (!Records.isEmpty()) {
-            Records.clear();
+        if (!records.isEmpty()) {
+            records.clear();
         }
 
         try {
@@ -62,7 +66,7 @@ public class Main {
                         Integer.parseInt(fields[3]), // Column lift
                         Integer.parseInt(fields[1]), // Column day
                         Integer.parseInt(fields[4])); // Column time
-                Records.add(record);
+                records.add(record);
             }
 
             br.close();
@@ -72,15 +76,29 @@ public class Main {
             ioe.printStackTrace();
         }
     }
+
+    public void EndPostReq(Client client) {
+        System.out.println(">>>>>> Putting data into database...");
+        try{
+            String api = "/SkiResort/rest/hello/endPost";
+            client.target(new URL(protocol, host, port, api).toString()).request().get();
+        } catch (MalformedURLException e){
+            e.printStackTrace();
+        }
+    }
+
     public void postTasks(int taskSize) {
         // apply multi-thread
         System.out.println(">>>>>> Start POST requests...");
+        String api = "/SkiResort/rest/hello/load";
         long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
+        client.property(ClientProperties.CONNECT_TIMEOUT, 9999999);
+        client.property(ClientProperties.READ_TIMEOUT,    9999999);
         ArrayList<PostRecord> postTasks = new ArrayList<PostRecord>();
         Stat stat = new Stat();
-        for (int i = 0; i < Records.size(); i++) { // test in 10000 data
-            postTasks.add(new PostRecord(protocol, host, port, "/rest/hello/load", Records.get(i), client, stat));
+        for (int i = 0; i < 1000; i++) { // test in 10000 data
+            postTasks.add(new PostRecord(protocol, host, port, api, records.get(i), client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
         try {
@@ -90,12 +108,17 @@ public class Main {
             e.printStackTrace();
         }
 
+        long endPostTime = System.currentTimeMillis();
+        EndPostReq(client);
+
         client.close();
+        long finalTime = System.currentTimeMillis();
         System.out.println(">>>>>> Session ends");
         System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
         System.out.println("> Number of threads: " + taskSize);
-        System.out.println("> Total run time: " + (System.currentTimeMillis() - startTime));
+        System.out.println("> Total run time: " + (finalTime - startTime));
+        System.out.println("> Total post time (wall time): " + (endPostTime - startTime));
         System.out.println("> Total request sent: " + stat.getSentRequestsNum());
         System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
         System.out.println("> Mean latency: " + stat.getMeanLatency());
@@ -105,26 +128,17 @@ public class Main {
 
     }
 
-    public void singleGetTask(int skierID, int dayNum) {
-        Client client = ClientBuilder.newClient();
-        String api = "/rest/hello/myvert/" + skierID + "&" + dayNum;
-        Stat stat = new Stat();
-        GetMyVert getMyVert = new GetMyVert(protocol, host, port, skierID, dayNum, client, stat);
-        getMyVert.call().toString();
-        client.close();
-    }
-
-    public void getTasks(int dayNum, int taskSize) {
+    public void getTasks(int dayNum) {
         // apply multi-thread
         System.out.println(">>>>>> Start GET requests...");
         long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
         ArrayList<GetMyVert> getMyVerts = new ArrayList<GetMyVert>();
         Stat stat = new Stat();
-        for (int i = 0; i < 10000; i++) { // test in 10000 data
-            getMyVerts.add(new GetMyVert(protocol, host, port, Records.get(i).getSkierID(), dayNum, client, stat));
+        for (int i = 0; i < 40000; i++) {
+            getMyVerts.add(new GetMyVert(protocol, host, port, i, dayNum, client, stat));
         }
-        ExecutorService pool = Executors.newFixedThreadPool(taskSize);
+        ExecutorService pool = Executors.newFixedThreadPool(100);// fix in 100 threads
         try {
             List<Future<MyVert>> futures = pool.invokeAll(getMyVerts);
             pool.shutdown();
@@ -136,7 +150,7 @@ public class Main {
         System.out.println(">>>>>> Session ends");
         System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
-        System.out.println("> Number of threads: " + taskSize);
+        System.out.println("> Number of threads: 100");
         System.out.println("> Total run time: " + (System.currentTimeMillis() - startTime));
         System.out.println("> Total request sent: " + stat.getSentRequestsNum());
         System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
@@ -148,11 +162,15 @@ public class Main {
 
     public static void main(String[] args) {
         Main main = new Main();
-        main.readFileData(fileURL);
 
-        main.postTasks(10);
-        //main.getTasks(1,10);
-        //main.singleGetTask(9,1);
+        if(args[0].equals("upload")) {
+            main.readFileData(Integer.parseInt(args[2]) == 1 ? fileURL1 : fileURL2);
+            main.postTasks(Integer.parseInt(args[1]));
+        }
+
+        if(args[0].equals("get")) {
+            main.getTasks(Integer.parseInt(args[1]));
+        }
     }
 }
 
