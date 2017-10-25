@@ -10,8 +10,6 @@ import javax.ws.rs.client.ClientBuilder;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -75,16 +73,6 @@ public class Main {
 
         }catch(IOException ioe){
             ioe.printStackTrace();
-        }
-    }
-
-    public void EndPostReq(Client client) {
-        System.out.println(">>>>>> Putting data into database...");
-        try{
-            String api = "/SkiResort/rest/hello/endPost";
-            client.target(new URL(protocol, host, port, api).toString()).request().get();
-        } catch (MalformedURLException e){
-            e.printStackTrace();
         }
     }
 
