@@ -49,7 +49,7 @@ public class GetMyVert implements Callable<MyVert> {
         try {
             response = webTarget.request().get();
             result = response.readEntity(MyVert.class);
-            System.out.println("SkierID: " + skierID + "  Vertical: " + result.getTotalVertical() + "  Lift times: " + result.getLiftTimes());
+            System.out.println(result.toString());
             response.close();
             stat.recordSentRequestNum();
             stat.recordSuccessfulRequestNum(response.getStatus() == 200);

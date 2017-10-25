@@ -22,6 +22,7 @@ public class Main {
 
     static final private String protocol = "http";
     static final private String host = "54.200.82.186";
+    //static final private String host = "localhost";
     static final private int port = 8080;
 
     static final String fileURL1 = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
@@ -97,7 +98,7 @@ public class Main {
         client.property(ClientProperties.READ_TIMEOUT,    9999999);
         ArrayList<PostRecord> postTasks = new ArrayList<PostRecord>();
         Stat stat = new Stat();
-        for (int i = 0; i < 1000; i++) { // test in 10000 data
+        for (int i = 0; i < records.size(); i++) { // test in 10000 data
             postTasks.add(new PostRecord(protocol, host, port, api, records.get(i), client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
@@ -108,17 +109,12 @@ public class Main {
             e.printStackTrace();
         }
 
-        long endPostTime = System.currentTimeMillis();
-        EndPostReq(client);
-
         client.close();
-        long finalTime = System.currentTimeMillis();
         System.out.println(">>>>>> Session ends");
         System.out.println();
         System.out.println(">>>>>> STATISTICS <<<<<<");
         System.out.println("> Number of threads: " + taskSize);
-        System.out.println("> Total run time: " + (finalTime - startTime));
-        System.out.println("> Total post time (wall time): " + (endPostTime - startTime));
+        System.out.println("> Total post time (wall time): " + (System.currentTimeMillis() - startTime));
         System.out.println("> Total request sent: " + stat.getSentRequestsNum());
         System.out.println("> Total successful request: " + stat.getSuccessRequestsNum());
         System.out.println("> Mean latency: " + stat.getMeanLatency());
@@ -135,7 +131,7 @@ public class Main {
         Client client = ClientBuilder.newClient();
         ArrayList<GetMyVert> getMyVerts = new ArrayList<GetMyVert>();
         Stat stat = new Stat();
-        for (int i = 0; i < 40000; i++) {
+        for (int i = 1; i <= 40000; i++) {
             getMyVerts.add(new GetMyVert(protocol, host, port, i, dayNum, client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(100);// fix in 100 threads
