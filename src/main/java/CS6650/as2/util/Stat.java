@@ -1,5 +1,6 @@
 package CS6650.as2.util;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,6 +57,12 @@ public class Stat {
         }
 
         return latencies.get((int)Math.floor(latencies.size() * 0.99));
+    }
+
+    public String getReqPerSec(long walltime) {
+        double reqPerSec = successRequestsNum / ((double)walltime / 1000);
+        DecimalFormat df = new DecimalFormat("0.00");
+        return df.format(reqPerSec);
     }
 
     public int getSuccessRequestsNum() {

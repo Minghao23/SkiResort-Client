@@ -36,7 +36,7 @@ public class GetMyVert implements Callable<MyVert> {
 
     public MyVert call() {
         URL url = null;
-        String api = "/SkiResort/rest/hello/myvert/" + skierID + "&" + dayNum;
+        String api = "/SkiResort-Server_war/rest/hello/myvert/" + skierID + "&" + dayNum;
         try{
             url = new URL(protocol, host, port, api);
         } catch (MalformedURLException e){
