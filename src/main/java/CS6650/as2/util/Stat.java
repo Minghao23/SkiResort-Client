@@ -72,8 +72,4 @@ public class Stat {
     public int getSentRequestsNum() {
         return sentRequestsNum;
     }
-
-    public long getTotalLatency() {
-        return totalLatency;
-    }
 }

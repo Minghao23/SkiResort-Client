@@ -35,6 +35,9 @@ public class Main {
 
     static final String DAY1URL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day1.csv";
     static final String DAY2URL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day2.csv";
+    static final String DAY3URL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day3.csv";
+    static final String DAY4URL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day4.csv";
+    static final String DAY5URL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day5.csv";
     static final String DAY999URL = "/Users/hu_minghao/CS6650/Assignment2/SkiResort-Client/files/BSDSAssignment2Day999.csv";
     ArrayList<Record> records = new ArrayList<Record>();
 
@@ -55,7 +58,7 @@ public class Main {
             System.out.println(">>>>>> Reading csv data...");
 
             BufferedReader br = new BufferedReader(new FileReader(fileURL));
-            String line = br.readLine(); // skip the first line
+            String line;
             while ((line = br.readLine()) != null){
                 String[] fields = line.split(",");
                 Record record = new Record(
@@ -63,7 +66,6 @@ public class Main {
                         Integer.parseInt(fields[3]), // Column lift
                         Integer.parseInt(fields[1]), // Column day
                         Integer.parseInt(fields[4])); // Column time
-//                System.out.println(records.size());
                 records.add(record);
             }
 
@@ -81,11 +83,9 @@ public class Main {
         String api = "/SkiResort-Server_war/rest/hello/load";
         long startTime = System.currentTimeMillis();
         Client client = ClientBuilder.newClient();
-//        client.property(ClientProperties.CONNECT_TIMEOUT, 9999999);
-//        client.property(ClientProperties.READ_TIMEOUT,    9999999);
         ArrayList<PostRecord> postTasks = new ArrayList<PostRecord>();
         Stat stat = new Stat();
-        for (int i = 0; i < records.size(); i++) { // test in 10000 data
+        for (int i = 0; i < records.size(); i++) {
             postTasks.add(new PostRecord(protocol, host, port, api, records.get(i), client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(taskSize);
@@ -120,7 +120,7 @@ public class Main {
         Client client = ClientBuilder.newClient();
         ArrayList<GetMyVert> getMyVerts = new ArrayList<GetMyVert>();
         Stat stat = new Stat();
-        for (int i = 1; i <= 3000; i++) {
+        for (int i = 1; i <= 10000; i++) {
             getMyVerts.add(new GetMyVert(protocol, host, port, i, dayNum, client, stat));
         }
         ExecutorService pool = Executors.newFixedThreadPool(100);// fix in 100 threads
@@ -253,95 +253,6 @@ public class Main {
             e.printStackTrace();
         }
     }
-//    public void getDBAnalysis(String hostNum) {
-//        String host = null;
-//        switch(hostNum) {
-//            case "host1" : host = host1;break;
-//            case "host2" : host = host2;break;
-//            case "host3" : host = host3;break;
-//        }
-//        Client client = ClientBuilder.newClient();
-//        URL url = null;
-//        String api = "/SkiResort-Server_war/rest/analysis/db";
-//        try{
-//            url = new URL(protocol, host, port, api);
-//        } catch (MalformedURLException e){
-//            e.printStackTrace();
-//        }
-//        WebTarget webTarget = client.target(url.toString());
-//        Response response;
-//        DBAnalysis result = null;
-//        try {
-//            response = webTarget.request().get();
-//            result = response.readEntity(DBAnalysis.class);
-//            response.close();
-//            client.close();
-//            System.out.println(">>>>>> Database Queries Analysis <<<<<<");
-//            System.out.println("> Target host: " + host);
-//            System.out.println("> Number of queries sent: " + result.getTotalRequestNum());
-//            System.out.println("> Mean latency: " + result.getMeanLatency());
-//            System.out.println("> Median latency: " + result.getMedianLatency());
-//            System.out.println("> 95th percentile latency: " + result.getThe95thLatency());
-//            System.out.println("> 99th percentile latency: " + result.getThe99thLatency());
-//        } catch (ProcessingException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-    public void clearAnalysis(String hostNum) {
-        String host = null;
-        switch(hostNum) {
-            case "host1" : host = host1;break;
-            case "host2" : host = host2;break;
-            case "host3" : host = host3;break;
-        }
-        Client client = ClientBuilder.newClient();
-        URL url = null;
-        String api = "/SkiResort-Server_war/rest/analysis/clear";
-        try{
-            url = new URL(protocol, host, port, api);
-            client.target(url.toString()).request().get();
-            System.out.println("> Target host: " + host);
-            System.out.println("> Cleared all analysis");
-        } catch (ProcessingException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e){
-            e.printStackTrace();
-        }
-    }
-
-//    public void getHttpAnalysisAll() {
-//        Client client = ClientBuilder.newClient();
-//        String api = "/SkiResort-Server_war/rest/analysis/http";
-//        try{
-//            URL url1 = new URL(protocol, host1, port, api);
-//            URL url2 = new URL(protocol, host2, port, api);
-//            URL url3 = new URL(protocol, host3, port, api);
-//            HttpAnalysis result1 = client.target(url1.toString()).request().get().readEntity(HttpAnalysis.class);
-//            HttpAnalysis result2 = client.target(url2.toString()).request().get().readEntity(HttpAnalysis.class);
-//            HttpAnalysis result3 = client.target(url3.toString()).request().get().readEntity(HttpAnalysis.class);
-//            client.close();
-//
-//            System.out.println(">>>>>> Http Requests Analysis <<<<<<");
-//            System.out.println("> Data came from all three servers");
-//            System.out.println("> Number of requests received: " +
-//                    (result1.getTotalRequestNum() + result2.getTotalRequestNum() + result3.getTotalRequestNum()));
-//            System.out.println("> Number of failed requests: " +
-//                    (result1.getFailedRequestNum() + result2.getFailedRequestNum() + result3.getFailedRequestNum()));
-//            System.out.println("> Mean latency: " + .getMeanLatency());
-//            System.out.println("> Median latency: " + result.getMedianLatency());
-//            System.out.println("> 95th percentile latency: " + result.getThe95thLatency());
-//            System.out.println("> 99th percentile latency: " + result.getThe99thLatency());
-//        } catch (ProcessingException e) {
-//            e.printStackTrace();
-//        } catch (MalformedURLException e){
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    private long helper(HttpAnalysis h1, HttpAnalysis h2, HttpAnalysis h3) {
-//        h1.getMeanLatency() * g
-//    }
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -351,9 +262,9 @@ public class Main {
             switch (Integer.parseInt(args[2])) {
                 case 1 : file = DAY1URL; break;
                 case 2 : file = DAY2URL;break;
-                case 3 : break;
-                case 4 : break;
-                case 5 : break;
+                case 3 : file = DAY3URL;break;
+                case 4 : file = DAY4URL;break;
+                case 5 : file = DAY5URL;break;
                 case 999 : file = DAY999URL;break;
             }
             main.readFileData(file);
